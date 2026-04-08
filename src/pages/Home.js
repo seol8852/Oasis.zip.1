@@ -27,7 +27,7 @@ const Home = () => {
       }
     };
 
-    if (WEATHER_KEY !== "여기에_OPENWEATHER_API_키를_넣으세요") {
+    if (WEATHER_KEY !== "424b327e43597e404a63f0bff675f2d3") {
       fetchWeather();
     }
   }, []);
