@@ -1,0 +1,47 @@
+/* src/App.css */
+
+/* 전체 화면 중앙 정렬 및 폰트 설정 */
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  font-family: '맑은 고딕', sans-serif;
+  background-color: #f5f5f5; /* 제일 바깥쪽 회색 배경 */
+}
+
+/* 1. 홈 화면 (Home) 핑크색 배경 */
+.home-container {
+  width: 390px; /* 모바일 아이폰 크기 */
+  height: 844px;
+  background-color: #ffe4e8; /* 피그마 핑크색 */
+  position: relative;
+}
+
+/* 날씨 박스 (오른쪽 위 회색 박스) */
+.weather-box {
+  width: 130px;
+  height: 123px;
+  background-color: #d9d9d9;
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 추천받기 파란색 버튼 */
+.recommend-btn {
+  width: 350px;
+  height: 80px;
+  background-color: #8c9eff; /* 피그마 파란색 */
+  color: black;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  position: absolute;
+  bottom: 100px;
+  left: 20px;
+  cursor: pointer;
+}
