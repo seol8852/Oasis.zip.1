@@ -9,106 +9,105 @@ const LocationSelector = () => {
   const mapContainer = useRef(null);
   const [places, setPlaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  // 1. 스크립트 로드 Effect
+  // 카카오맵 렌더링 및 장소 검색 Effect
   useEffect(() => {
-    // 이미 스크립트가 로드되어 있는 경우 방지
-    if (document.getElementById('kakao-map-script')) {
-      if (window.kakao && window.kakao.maps) {
-        setIsScriptLoaded(true);
-      }
-      return;
-    }
-
-    const KAKAO_MAP_APP_KEY = process.env.REACT_APP_KAKAO_REST_API_KEY || "0c88817011af7d25b887d2cd03c979d1"; // 카카오 맵 JS도 같은 키를 쓰거나, JS용 키가 따로 있다면 교체
-
-    const script = document.createElement("script");
-    script.id = "kakao-map-script";
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_APP_KEY}&libraries=services&autoload=false`;
-    script.async = true;
-
-    script.onload = () => {
-      console.log("Kakao Map SDK script loaded.");
-      window.kakao.maps.load(() => {
-        console.log("Kakao maps API loaded.");
-        setIsScriptLoaded(true);
-      });
-    };
-
-    script.onerror = () => {
-      console.error("Failed to load Kakao Map SDK script.");
-      setIsLoading(false);
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      // 컴포넌트가 언마운트 될 때 스크립트를 제거하면 다시 마운트 될 때 문제가 생길 수 있으므로 제거하지 않음
-    };
-  }, []);
-
-  // 2. 지도 생성 및 장소 검색 Effect
-  useEffect(() => {
-    if (!isScriptLoaded || !mapContainer.current) {
-      // 스크립트가 로드되지 않았거나, 지도를 담을 div가 준비되지 않았으면 실행하지 않음
-      return;
-    }
-
+    // 1. 위치 정보 체크
     if (!state.lat || !state.lon) {
       alert('위치 정보를 확인할 수 없습니다. 다시 시도해주세요.');
       navigate('/');
       return;
     }
 
-    console.log("Map container is ready, initializing map...");
-    const position = new window.kakao.maps.LatLng(state.lat, state.lon);
+    // 2. 카카오맵 스크립트 로드 대기 (index.html에서 로드된 객체 확인)
+    const initMap = () => {
+      const { kakao } = window;
 
-    const mapOptions = {
-      center: position,
-      level: 3,
-    };
+      // kakao 객체가 아직 없으면 약간 대기 후 다시 시도 (재귀)
+      if (!kakao || !kakao.maps || !kakao.maps.services) {
+        console.log("Waiting for Kakao Maps to load...");
+        setTimeout(initMap, 500);
+        return;
+      }
 
-    const map = new window.kakao.maps.Map(mapContainer.current, mapOptions);
-    console.log("Kakao Map initialized successfully.");
+      console.log("Kakao Map API is ready.");
 
-    new window.kakao.maps.Marker({
-      position: position,
-      map: map
-    });
+      // 지도를 담을 DOM 엘리먼트가 준비되지 않았다면 대기
+      if (!mapContainer.current) {
+        console.log("Waiting for map container DOM...");
+        setTimeout(initMap, 500);
+        return;
+      }
 
-    const ps = new window.kakao.maps.services.Places(map);
+      // kakao.maps.load 콜백 안에서 실제 지도를 초기화해야 안전함
+      kakao.maps.load(() => {
+        const position = new kakao.maps.LatLng(state.lat, state.lon);
 
-    ps.categorySearch('CE7', (data, status) => {
-        let allPlaces = [];
-        if (status === window.kakao.maps.services.Status.OK) allPlaces = [...data];
+        const mapOptions = {
+          center: position,
+          level: 3,
+        };
 
-        ps.categorySearch('AT4', (data2, status2) => {
-            if (status2 === window.kakao.maps.services.Status.OK) allPlaces = [...allPlaces, ...data2];
+        const map = new kakao.maps.Map(mapContainer.current, mapOptions);
 
-            ps.categorySearch('FD6', (data3, status3) => {
-                if (status3 === window.kakao.maps.services.Status.OK) allPlaces = [...allPlaces, ...data3];
+        new kakao.maps.Marker({
+          position: position,
+          map: map
+        });
 
-                allPlaces.sort((a, b) => parseInt(a.distance) - parseInt(b.distance));
-                setPlaces(allPlaces.slice(0, 10));
-                setIsLoading(false);
+        const ps = new kakao.maps.services.Places(map);
 
-                allPlaces.slice(0, 10).forEach(place => {
-                    new window.kakao.maps.Marker({
-                        map: map,
-                        position: new window.kakao.maps.LatLng(place.y, place.x),
-                        title: place.place_name,
-                        image: new window.kakao.maps.MarkerImage(
-                            'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-                            new window.kakao.maps.Size(24, 35)
-                        )
+        ps.categorySearch('CE7', (data, status) => {
+            let allPlaces = [];
+            if (status === kakao.maps.services.Status.OK) allPlaces = [...data];
+
+            ps.categorySearch('AT4', (data2, status2) => {
+                if (status2 === kakao.maps.services.Status.OK) allPlaces = [...allPlaces, ...data2];
+
+                ps.categorySearch('FD6', (data3, status3) => {
+                    if (status3 === kakao.maps.services.Status.OK) allPlaces = [...allPlaces, ...data3];
+
+                    // 집(가짜 데이터)을 예외 처리로 추가
+                    const homePlace = {
+                        id: 'home-special-id',
+                        place_name: '포근한 우리 집',
+                        category_group_name: '집/휴식',
+                        category_group_code: 'HOME',
+                        category_name: '집',
+                        distance: '0',
+                        x: state.lon,
+                        y: state.lat
+                    };
+                    allPlaces.push(homePlace);
+
+                    allPlaces.sort((a, b) => parseInt(a.distance) - parseInt(b.distance));
+                    setPlaces(allPlaces.slice(0, 10));
+                    setIsLoading(false);
+
+                    allPlaces.slice(0, 10).forEach(place => {
+                        // 집(가짜 데이터)은 지도 마커 생성 생략 또는 기본 마커 사용
+                        if(place.id !== 'home-special-id') {
+                            new kakao.maps.Marker({
+                                map: map,
+                                position: new window.kakao.maps.LatLng(place.y, place.x),
+                                title: place.place_name,
+                                image: new window.kakao.maps.MarkerImage(
+                                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                                    new window.kakao.maps.Size(24, 35)
+                                )
+                            });
+                        }
                     });
-                });
+                }, {useMapCenter: true, radius: 500});
             }, {useMapCenter: true, radius: 500});
         }, {useMapCenter: true, radius: 500});
-    }, {useMapCenter: true, radius: 500});
+      });
+    };
 
-  }, [isScriptLoaded, state.lat, state.lon, navigate]);
+    // 맵 초기화 함수 최초 실행
+    initMap();
+
+  }, [navigate, state.lat, state.lon]);
 
   const handlePlaceSelect = (place) => {
     navigate('/analysis', {
@@ -124,8 +123,13 @@ const LocationSelector = () => {
   return (
     <div style={{ width: '390px', margin: '0 auto', backgroundColor: '#e6f4f1', minHeight: '100vh', position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
-      <div style={{ padding: '20px', color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px', backgroundColor: 'white', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-        oasis.zip
+      <div style={{ padding: '20px', backgroundColor: 'white', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', position: 'relative' }}>
+        <div
+          onClick={() => navigate('/')}
+          style={{ color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px', cursor: 'pointer', display: 'inline-block' }}
+        >
+          oasis.zip
+        </div>
         <div style={{ fontSize: '14px', color: '#333', marginTop: '10px', fontWeight: 'bold' }}>
             당신은 지금 어디에 있나요? 📍
         </div>
@@ -174,7 +178,7 @@ const LocationSelector = () => {
                                 {place.place_name}
                             </div>
                             <div style={{ fontSize: '12px', color: '#6c757d' }}>
-                                {place.category_group_name || '분류 없음'} · {place.distance}m
+                                {place.category_group_name || '분류 없음'} {place.distance !== '0' ? `· ${place.distance}m` : ''}
                             </div>
                         </div>
                         <div style={{ color: '#0077b6', fontSize: '18px' }}>›</div>

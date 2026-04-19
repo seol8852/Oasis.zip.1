@@ -83,7 +83,10 @@ const Home = () => {
   return (
     <div style={{ width: '390px', margin: '0 auto', backgroundColor: '#e6f4f1', height: '100vh', position: 'relative' }}>
 
-      <div style={{ position: 'absolute', top: '20px', left: '20px', color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px' }}>
+      <div
+        onClick={() => navigate('/')}
+        style={{ position: 'absolute', top: '20px', left: '20px', color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px', cursor: 'pointer', zIndex: 100 }}
+      >
         oasis.zip
       </div>
 

@@ -25,6 +25,8 @@ const Analysis = () => {
   };
 
   const getEmotionalKeywordFromLocation = (categoryCode, categoryName) => {
+    if (categoryCode === 'HOME') return "편안한 집에서 휴식할 때 듣는 감성 팝송";
+
     switch (categoryCode) {
       case 'CE7': return "잔잔한 카페 재즈 커피와 어울리는 로파이(Lo-fi)";
       case 'SW8':
@@ -128,7 +130,10 @@ const Analysis = () => {
   return (
     <div style={{ width: '390px', margin: '0 auto', backgroundColor: '#e6f4f1', height: '100vh', position: 'relative' }}>
       
-      <div style={{ position: 'absolute', top: '20px', left: '20px', color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px' }}>
+      <div
+        onClick={() => navigate('/')}
+        style={{ position: 'absolute', top: '20px', left: '20px', color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px', cursor: 'pointer', zIndex: 100 }}
+      >
         oasis.zip
       </div>
 

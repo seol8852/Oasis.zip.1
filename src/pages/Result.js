@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Result = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchQuery = location.state?.searchQuery || "날씨에 어울리는 노래";
   const [songs, setSongs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,9 +41,16 @@ const Result = () => {
   }, [searchQuery]);
 
   return (
-    <div style={{ width: '390px', margin: '0 auto', backgroundColor: '#e6f4f1', minHeight: '100vh', padding: '20px', boxSizing: 'border-box' }}>
+    <div style={{ width: '390px', margin: '0 auto', backgroundColor: '#e6f4f1', minHeight: '100vh', padding: '20px', boxSizing: 'border-box', position: 'relative' }}>
       
-      <h2 style={{ color: '#0077b6', textAlign: 'center', marginTop: '10px', marginBottom: '30px', fontWeight: '900' }}>
+      <div
+        onClick={() => navigate('/')}
+        style={{ color: '#0077b6', fontWeight: '900', fontSize: '20px', letterSpacing: '1px', cursor: 'pointer', marginBottom: '20px' }}
+      >
+        oasis.zip
+      </div>
+
+      <h2 style={{ color: '#0077b6', textAlign: 'center', marginTop: '10px', marginBottom: '30px', fontWeight: '900', fontSize: '22px' }}>
         오늘의 오아시스 플레이리스트 🎧
       </h2>
 
@@ -76,6 +84,18 @@ const Result = () => {
             </div>
           </div>
         ))
+      )}
+
+      {/* 홈으로 돌아가기 버튼 */}
+      {!isLoading && (
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            width: '100%', height: '60px', backgroundColor: '#48cae4', color: 'white', border: 'none', borderRadius: '15px', boxShadow: '0 4px 10px rgba(72, 202, 228, 0.3)', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', marginTop: '10px'
+          }}
+        >
+          처음으로 돌아가기 🏠
+        </button>
       )}
     </div>
   );
